@@ -27,7 +27,7 @@ callback_manager = CallbackManager([token_counter])
 service_context = get_service_context("gpt-3.5-turbo",temperature=0.00,callback_manager=callback_manager,streaming=True)
 doc_engine.add_engine("banking_topics", "Provides information about Bank of Georgia products and services", service_context)
 query_engine_tools = doc_engine.get_engine_tools()
-  
+    
 
 app = FastAPI()
 origins = ["*"]
