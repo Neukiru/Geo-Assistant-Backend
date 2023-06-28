@@ -17,6 +17,8 @@ class MiluStreamingCallbackHandler(StreamingStdOutCallbackHandler):
         """Run when LLM ends running."""
         await self.sio.emit("on_llm_new_token",{"token_sequence_end":True})
 
-    async def on_llm_start(self, response: LLMResult, **kwargs: Any) -> None:
-        """Run when LLM ends running."""
+    async def on_llm_start(
+        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
+    ) -> None:
+        """Run when LLM starts running."""
         await self.sio.emit("on_llm_new_token",{"token_sequence_start":True})
