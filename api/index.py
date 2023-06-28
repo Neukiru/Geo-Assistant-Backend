@@ -31,17 +31,16 @@ def greet(text: str):
 async def on_message(sid, *args, **kwargs):
     user_message = args[0]['message']
     print("User connected", user_message)
-    message_start = None
-    message_end = None
     for index in range(0, 5):
         if index == 0:
             message_start = True
         else:
             message_start = False
         if index == 4:
-            message_end == True
+            message_end = True
         else:
-            message_end == False
+            message_end = False
+        
         await sio.emit('assistant_response', {'message': 'No no ', 'message_start': message_start, 'message_end': message_end}, to=sid)
         time.sleep(1)
 
