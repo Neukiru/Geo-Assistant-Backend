@@ -3,4 +3,3 @@ fastapi_socketio
 websockets
 uvicorn
 llama-index
-tiktoken
