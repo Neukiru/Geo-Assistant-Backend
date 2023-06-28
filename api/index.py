@@ -38,7 +38,7 @@ app.add_middleware(CORSMiddleware,
                    allow_methods=['*'],
                    allow_headers=['*'])
 
-handler = MiluStreamingCallbackHandler(sio)
+handler = MiluStreamingCallbackHandler('https://geo-assistant-backend.onrender.com/')
 
 preamble = """
 You are a Bank of Georgia call center AGENT.
