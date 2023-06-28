@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
 import time
-
+  
 import os
 import tiktoken
 from api.document_query_engine import DocumentQueryEngine
