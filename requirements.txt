@@ -1,2 +1,4 @@
 llama-index
 fastapi_socketio
+uvicorn
+websockets
