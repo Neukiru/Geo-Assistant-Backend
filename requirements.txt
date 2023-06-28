@@ -28,8 +28,6 @@ h11==0.14.0
 idna==3.4
 importlib-metadata==6.7.0
 jedi==0.18.2
-langchain==0.0.218
-langchainplus-sdk==0.0.17
 llama-index==0.6.35
 locket==1.0.0
 MarkupSafe==2.1.3
