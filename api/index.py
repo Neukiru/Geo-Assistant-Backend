@@ -57,7 +57,7 @@ Ending the Conversation: Always end the conversation with a pleasant note. Thank
 Remember, your ultimate goal is to provide excellent customer service, ensuring all their banking needs and queries are resolved in the most efficient, respectful, and helpful manner possible.
 Lastly, use as many tools as needed to provide user with right answer.
 """
-
+   
 history = ChatMessageHistory()
 history.add_user_message(preamble)
 

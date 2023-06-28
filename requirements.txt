@@ -3,3 +3,4 @@ fastapi_socketio
 uvicorn
 websockets
 tiktoken
+python-socketio[client]
