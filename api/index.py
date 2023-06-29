@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
 import time
+import asyncio
      
 import os
 import tiktoken
@@ -17,7 +18,7 @@ from langchain.memory import ChatMessageHistory
 from api.milu_streaming_callback_handler import MiluStreamingCallbackHandler
 from llama_index.agent import OpenAIAgent
 
-os.environ["OPENAI_API_KEY"] = "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"
+
 doc_engine = DocumentQueryEngine(storage_path='./api/',model_of_choice="gpt-3.5-turbo")
 token_counter = TokenCountingHandler(
     tokenizer=tiktoken.encoding_for_model("gpt-3.5-turbo").encode
@@ -38,7 +39,6 @@ app.add_middleware(CORSMiddleware,
                    allow_methods=['*'],
                    allow_headers=['*'])
 
-handler = MiluStreamingCallbackHandler('https://geo-assistant-backend.onrender.com/')
 
 preamble = """
 You are a Bank of Georgia call center AGENT.
@@ -60,57 +60,57 @@ Lastly, use as many tools as needed to provide user with right answer.
    
 history = ChatMessageHistory()
 history.add_user_message(preamble)
-
-custom_llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-0613",callbacks=[handler],streaming=True)
-openai_agent = OpenAIAgent.from_tools(
-    query_engine_tools,
-    max_function_calls=10,
-    llm=custom_llm,
-    verbose=False,
-    chat_history = history,
-    callback_manager=callback_manager
-)
+openai_agent = None
 
 
 
-@app.get("/hello")
-def hello():
-    return {"message": "Hello, World!"}
+# async def websocket_emitter():
+#     global message_ready
+#     while True:
+#         await message_ready.wait()
+
+#         # Reset the event for the next message
+#         message_ready.clear()
+#         message = await message_queue.get()
+#         print('message',message)
+#         await sio.emit("assistant_response", message, to=message["user_sid"])
+#         message_queue.task_done()
 
 
-@app.get("/greet")
-def greet(text: str):
-    return {
-        "content": text,
-        "isUser": False,
-        "knowledgeContext": "test"
-    }
+@app.on_event("startup")
+async def startup_event():
+    pass
+    # asyncio.create_task(websocket_emitter())
 
 
 @sio.on('message')
 async def on_message(sid, *args, **kwargs):
     user_message = args[0]['message']
-    print("User connected", user_message)
-    openai_agent.chat(user_message)
+    print("User messaged", user_message)
+    await openai_agent.achat(user_message)
 
 
 @sio.on('connect')
 async def on_connect(sid, *args, **kwargs):
     print("User connected")
 
-@sio.on('on_llm_new_token')
-async def on_llm_new_token(sid, *args, **kwargs):
-    if(args[0].get("token_sequence_start")):
-        message_start = True
-        token_sequence = ''
-    else:
-        message_start = False
-        token_sequence = args[0]['token_sequence']
 
-    if(args[0].get("token_sequence_end")):
-        message_end = True
-        token_sequence = ''
-    else:
-        message_end = False
-        token_sequence = args[0]['token_sequence']
-    await sio.emit('assistant_response', {'message': token_sequence, 'message_start': message_start, 'message_end': message_end}, to=sid)
+@sio.on("initialize_agent")
+async def on_initialize_agent(sid, *args, **kwargs):
+    meta_kwargs = {"user_sid": sid}
+    global openai_agent
+    handler = MiluStreamingCallbackHandler(sio,**meta_kwargs)
+    custom_llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-0613", callbacks=[handler], streaming=True)
+    openai_agent = OpenAIAgent.from_tools(
+        query_engine_tools,
+        max_function_calls=10,
+        llm=custom_llm,
+        verbose=False,
+        chat_history=history,
+        callback_manager=callback_manager,
+    )
+
+    print("Agent initialized")
+
+    print("Initialization complete")
+
