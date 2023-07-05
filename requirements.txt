@@ -1,4 +1,4 @@
-llama-index
+llama-index==0.6.29
 fastapi_socketio
 uvicorn
 websockets
