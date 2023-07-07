@@ -13,7 +13,7 @@ from llama_index.callbacks import (
     TokenCountingHandler
 )
                    
-from llama_index.bridge.langchain import ChatOpenAI
+from llama_index.llms.openai import OpenAI
 from langchain.memory import ChatMessageHistory
 from api.milu_streaming_callback_handler import MiluStreamingCallbackHandler
 from llama_index.agent import OpenAIAgent
@@ -76,9 +76,14 @@ async def startup_event():
 @sio.on('message')
 async def on_message(sid, *args, **kwargs):
     user_message = args[0]['message']
-    print("User messaged", user_message)
-    await openai_agent.achat(user_message)
+    chat_generator = openai_agent.astream_chat(user_message)
+    async for response in chat_generator:
+        response_gen = response.response_gen
+    
+    for token in response_gen:
+        await sio.emit("assistant_response", {'message': token, 'message_end': False}, to=sid)
 
+    await sio.emit("assistant_response", {'message': '', 'message_end': True}, to=sid)
 
 @sio.on('connect')
 async def on_connect(sid, *args, **kwargs):
@@ -90,17 +95,20 @@ async def on_initialize_agent(sid, *args, **kwargs):
     meta_kwargs = {"user_sid": sid}
     global openai_agent
     handler = MiluStreamingCallbackHandler(sio,**meta_kwargs)
-    custom_llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-0613", callbacks=[handler], streaming=True)
+    custom_llm = OpenAI(model="gpt-3.5-turbo-0613",temperature=0, callbacks=[handler])
     openai_agent = OpenAIAgent.from_tools(
         query_engine_tools,
         max_function_calls=10,
         llm=custom_llm,
         verbose=False,
-        chat_history=history,
         callback_manager=callback_manager,
+        system_prompt = preamble
     )
 
     print("Agent initialized")
 
     print("Initialization complete")
 
+@sio.on("print_event")
+async def print_event(sid, *args, **kwargs):
+    print(args[0])

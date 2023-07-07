@@ -30,8 +30,10 @@ class MiluStreamingCallbackHandler(AsyncCallbackHandler):
 
     async def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
         """Run on new LLM token. Only available when streaming is enabled."""
+        await self.sio.emit("print_event", {'message': token})
         await self.sio.emit("assistant_response", {'message': token, 'message_end': False}, to=self.user_sid)
 
     async def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
         """Run when LLM ends running."""
+        await print(response)
         await self.sio.emit("assistant_response", {'message': '', 'message_end': True}, to=self.user_sid)
